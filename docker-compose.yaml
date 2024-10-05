@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  pocketbase:
+    build:
+      context: ./pocketbase  # This points to the directory with your Dockerfile
+    working_dir: /usr/src/app
+    volumes:
+      - ./pocketbase/pb_hooks:/pb/pb_hooks
+      - ./pocketbase/pb_migrations:/pb/pb_migrations
+    #ports:
+      #- '8181:8080'  # Expose Pocketbase on port 8181
+    networks:
+      - app-network
+
+    profiles:
+      - dev
+      - production
+
+  qrapp:
+    image: node:18-alpine
+    container_name: qrapp  # Added container name for clarity
+    working_dir: /usr/src/app
+    volumes:
+      - ./qrapp:/usr/src/app
+    #ports:
+      #- '3000:3000'  # Expose Node.js app on port 3000
+    depends_on:
+      - pocketbase  # Ensure Pocketbase starts before qrapp
+    command: tail -f /dev/null  # Keeps the container running
+    networks:
+      - app-network
+    profiles:
+      - dev
+      - production
+
+  swag:
+    image: lscr.io/linuxserver/swag
+    container_name: swag
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PUID=1000  # Replace with your user ID
+      - PGID=1000  # Replace with your group ID
+      - URL=randomdomain-url-etc.online
+      - SUBDOMAINS= www
+      - VALIDATION= http
+      - EMAIL=abinadi.swapp@nsanpete.org  # Required but not used when SSL is disabled
+    volumes:
+      - ./swag:/config
+    ports:
+      - 80:80
+      - 443:443
+    restart: unless-stopped
+    networks:
+      - app-network
+      - exposed-network
+
+    profiles:
+      - production
+
+  nginx:
+    image: nginx:latest  # Use the latest NGINX image
+    container_name: nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"  # Map port 80 of the host to port 80 of the container
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d  # Mount the configuration files
+    networks:
+      - app-network
+      - exposed-network # Use a custom network for the proxy
+    profiles:
+      - dev
+
+networks:
+  app-network:
+    internal: true
+
+  exposed-network:
+    driver: bridge
