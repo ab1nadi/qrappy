@@ -25,35 +25,26 @@ services:
       #- '3000:3000'  # Expose Node.js app on port 3000
     depends_on:
       - pocketbase  # Ensure Pocketbase starts before qrapp
-    command: tail -f /dev/null  # Keeps the container running
+    command: node /usr/src/app/server/index.js  # Keeps the container running
     networks:
       - app-network
     profiles:
       - dev
       - production
 
-  swag:
-    image: lscr.io/linuxserver/swag
-    container_name: swag
-    cap_add:
-      - NET_ADMIN
-    environment:
-      - PUID=1000  # Replace with your user ID
-      - PGID=1000  # Replace with your group ID
-      - URL=randomdomain-url-etc.online
-      - SUBDOMAINS= www
-      - VALIDATION= http
-      - EMAIL=abinadi.swapp@nsanpete.org  # Required but not used when SSL is disabled
-    volumes:
-      - ./swag:/config
-    ports:
-      - 80:80
-      - 443:443
+  nginx-proxy-manager:
+    image: 'jc21/nginx-proxy-manager:latest'
     restart: unless-stopped
+    ports:
+      - '80:80'
+      - '81:81'
+      - '443:443'
+    volumes:
+      - ./nginx-proxy-manager/data:/data
+      - ./nginx-proxy-manager/letsencrypt:/etc/letsencrypt
     networks:
       - app-network
-      - exposed-network
-
+      - exposed-network # Use a custom network for the proxy
     profiles:
       - production
 
