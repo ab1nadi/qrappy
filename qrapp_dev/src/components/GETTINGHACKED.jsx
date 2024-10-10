@@ -34,13 +34,13 @@ export function GettingHacked() {
   return (
     <div className='w-screen h-screen flex flex-col justify-center items-center -z-10'>
       <div className='w-full flex justify-center'>
-        <img className='w-80 h-80' src={svg} alt="Skull" />
+        <img className=' w-40 h-40 sm:w-80 sm:h-80' src={svg} alt="Skull" />
       </div>
       <div className='w-full flex justify-center'>
-        <h1 className="text-red-600">DOWNLOADING TROJAN</h1>
+        <div className="text-red-600 text-lg sm:text-5xl">DOWNLOADING TROJAN</div>
       </div>
       <div className='w-full flex justify-center'>
-        <div className='w-[500px] h-10 border-black border-2'>
+        <div className=' w-[200px] sm:w-[500px] h-4 sm:h-10 border-black border-2'>
           <div
             style={{ width: `${percent}%` }}
             className='h-full bg-red-600'
