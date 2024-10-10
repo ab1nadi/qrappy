@@ -8,7 +8,7 @@ const app = express();
 const PocketBase = require('pocketbase/cjs');
 
 const pb = new PocketBase('http://pocketbase:8080'); // Replace with your PocketBase URL
-pb.admins.authWithPassword('abinadi.swapp@nsanpete.org', 'jbz5ZKJ5wah-cwp7fcx')
+pb.admins.authWithPassword(process.env.POCKET_USER, process.env.POCKET_PASSWORD)
 
 
 // Middleware to parse the request body (should be before routes)

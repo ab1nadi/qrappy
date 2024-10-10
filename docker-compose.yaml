@@ -18,6 +18,9 @@ services:
     working_dir: /usr/src/app
     volumes:
       - ./qrapp:/usr/src/app
+    environment:
+      - POCKET_USER=abinadi.swapp@nsanpete.org
+      - POCKET_PASSWORD=fakepassword
     depends_on:
       - pocketbase  # Ensure Pocketbase starts before qrapp
     command: node /usr/src/app/server/index.js  # Keeps the container running
