@@ -6,11 +6,8 @@ services:
     volumes:
       - ./pocketbase/pb_hooks:/pb/pb_hooks
       - ./pocketbase/pb_migrations:/pb/pb_migrations
-    #ports:
-      #- '8181:8080'  # Expose Pocketbase on port 8181
     networks:
       - app-network
-
     profiles:
       - dev
       - production
@@ -21,8 +18,6 @@ services:
     working_dir: /usr/src/app
     volumes:
       - ./qrapp:/usr/src/app
-    #ports:
-      #- '3000:3000'  # Expose Node.js app on port 3000
     depends_on:
       - pocketbase  # Ensure Pocketbase starts before qrapp
     command: node /usr/src/app/server/index.js  # Keeps the container running
@@ -32,19 +27,26 @@ services:
       - dev
       - production
 
-  nginx-proxy-manager:
-    image: 'jc21/nginx-proxy-manager:latest'
-    restart: unless-stopped
-    ports:
-      - '80:80'
-      - '81:81'
-      - '443:443'
+  swag:
+    image: lscr.io/linuxserver/swag
+    container_name: swag
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Denver
+      - URL=randomdomain-url-etc.online
+      - SUBDOMAINS=wildcard
     volumes:
-      - ./nginx-proxy-manager/data:/data
-      - ./nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+      - ./swag:/config
+    ports:
+      - 443:443
+      - 80:80
+    restart: unless-stopped
     networks:
       - app-network
-      - exposed-network # Use a custom network for the proxy
+      - exposed-network  # Use a custom network for the proxy
     profiles:
       - production
 
@@ -52,19 +54,20 @@ services:
     image: nginx:latest  # Use the latest NGINX image
     container_name: nginx-proxy
     restart: unless-stopped
+    depends_on:
+      - swag  # Ensure SWAG starts before nginx
     ports:
       - "80:80"  # Map port 80 of the host to port 80 of the container
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d  # Mount the configuration files
     networks:
       - app-network
-      - exposed-network # Use a custom network for the proxy
+      - exposed-network  # Use a custom network for the proxy
     profiles:
       - dev
 
 networks:
   app-network:
     driver: bridge
-
   exposed-network:
     driver: bridge
